@@ -93,12 +93,16 @@ namespace Microsoft.NetCore.Analyzers.Runtime
 
             bool HasDisposeMethod(INamedTypeSymbol namedType)
             {
-                foreach (var method in namedType.GetMembers().OfType<IMethodSymbol>())
+                while (namedType != null)
                 {
-                    if (IsDisposeMethod(method))
+                    foreach (var method in namedType.GetMembers().OfType<IMethodSymbol>())
                     {
-                        return true;
+                        if (IsDisposeMethod(method))
+                        {
+                            return true;
+                        }
                     }
+                    namedType = namedType.BaseType;
                 }
 
                 return false;

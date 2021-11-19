@@ -3469,5 +3469,71 @@ Class B
 End Class"
             }.RunAsync();
         }
+
+        [Fact, WorkItem(5099, "https://github.com/dotnet/roslyn-analyzers/issues/5099")]
+        public async Task InheritIDisposableAndDefineIDisposableField_NotDisposed_DiagnosticAsync()
+        {
+            await VerifyCS.VerifyAnalyzerAsync(@"
+using System;
+
+class D : IDisposable
+{
+    public void Dispose()
+    {
+    }
+}
+
+class A : IDisposable
+{
+    private D d = new D();
+
+    public virtual void Dispose()
+    {
+        d.Dispose();
+    }
+}
+
+class B : A
+{
+    private D [|d2|] = new D();
+}
+");
+        }
+
+        [Fact, WorkItem(5099, "https://github.com/dotnet/roslyn-analyzers/issues/5099")]
+        public async Task InheritIDisposableAndDefineIDisposableField_Disposed_NoDiagnosticAsync()
+        {
+            await VerifyCS.VerifyAnalyzerAsync(@"
+using System;
+
+class D : IDisposable
+{
+    public void Dispose()
+    {
+    }
+}
+
+class A : IDisposable
+{
+    private D d = new D();
+
+    public virtual void Dispose()
+    {
+        d.Dispose();
+    }
+}
+
+class B : A
+{
+    private D d2 = new D();
+
+    public override void Dispose()
+    {
+        d2.Dispose();
+        base.Dispose();
+    }
+}
+");
+        }
     }
 }
